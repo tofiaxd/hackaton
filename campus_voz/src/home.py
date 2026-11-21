@@ -650,7 +650,7 @@ def build_home(
             controls=[
 
                 ft.Container(
-                    expand=3.5,
+                    expand=3,
                     content=ft.Stack(
                         expand=True,
                         controls=[
