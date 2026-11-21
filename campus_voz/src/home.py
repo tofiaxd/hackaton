@@ -1,7 +1,9 @@
 
+import asyncio
 import flet as ft
 import flet_map as ftm
 import themes
+from voz import ReconocimientoVoz
 
 
 def build_home(
@@ -11,6 +13,7 @@ def build_home(
     on_maps=None,
     on_routes=None,
     on_add_alert=None,
+    on_voice_command=None,
     route_coordinates=None,
     current_location=None,
     destination=None,
@@ -20,6 +23,10 @@ def build_home(
 
     if reportes is None:
         reportes = []
+
+    # ==================================
+    # MAPA
+    # ==================================
 
     campus_center = ftm.MapLatitudeLongitude(
         latitude=-33.0327,
@@ -70,7 +77,10 @@ def build_home(
         "comedor": (-33.03533333, -71.59588889),
     }
 
+    # ==================================
     # MARCADORES DEL MAPA
+    # ==================================
+
     marcadores = []
 
     if current_location:
@@ -105,7 +115,7 @@ def build_home(
             )
         )
 
-    # MARCADORES DE ALERTAS YA REGISTRADAS
+    # MARCADORES DE ALERTAS REGISTRADAS
     for reporte in reportes:
         zona = reporte.get("zona")
 
@@ -154,7 +164,10 @@ def build_home(
         layers=map_layers,
     )
 
+    # ==================================
     # CONTADOR DE ALERTAS
+    # ==================================
+
     contador_alertas = ft.Text(
         f"Alertas registradas: {len(reportes)}",
         size=12,
@@ -162,7 +175,10 @@ def build_home(
         text_align=ft.TextAlign.CENTER,
     )
 
+    # ==================================
     # FORMULARIO PARA CREAR UNA ALERTA
+    # ==================================
+
     def abrir_dialogo_alerta(e=None):
 
         tipo_alerta = ft.Dropdown(
@@ -214,8 +230,11 @@ def build_home(
         )
 
         def guardar_alerta(ev):
+
             if not tipo_alerta.value or not zona_alerta.value:
-                mensaje.value = "Selecciona el tipo de problema y su ubicación."
+                mensaje.value = (
+                    "Selecciona el tipo de problema y su ubicación."
+                )
                 page.update()
                 return
 
@@ -230,7 +249,7 @@ def build_home(
                     page.update()
                     return
 
-            # Agregar marcador al mapa
+            # AGREGAR MARCADOR AL MAPA
             if zona_alerta.value in destinos:
                 lat, lon = destinos[zona_alerta.value]
 
@@ -299,7 +318,10 @@ def build_home(
 
         page.show_dialog(dialogo)
 
+    # ==================================
     # BOTÓN GOOGLE MAPS
+    # ==================================
+
     maps_button = ft.Button(
         content=ft.Text("Maps"),
         icon=ft.Icons.MAP,
@@ -313,7 +335,10 @@ def build_home(
         on_click=on_maps,
     )
 
+    # ==================================
     # BOTÓN AÑADIR ALERTA
+    # ==================================
+
     alert_button = ft.Button(
         content=ft.Text("Añadir alerta"),
         icon=ft.Icons.WARNING_AMBER,
@@ -327,12 +352,20 @@ def build_home(
         on_click=abrir_dialogo_alerta,
     )
 
+    # ==================================
+    # MENÚ Y BARRA SUPERIOR
+    # ==================================
+
     menu = ft.PopupMenuButton(
         icon=ft.Icons.MENU,
         tooltip="Abrir menú",
         items=[
-            ft.PopupMenuItem(content=ft.Text("Configuración")),
-            ft.PopupMenuItem(content=ft.Text("Acerca de Campus Access")),
+            ft.PopupMenuItem(
+                content=ft.Text("Configuración")
+            ),
+            ft.PopupMenuItem(
+                content=ft.Text("Acerca de Campus Access")
+            ),
         ],
     )
 
@@ -357,22 +390,151 @@ def build_home(
         ],
     )
 
-    # MICRÓFONO
+    # ==================================
+    # RECONOCIMIENTO DE VOZ
+    # ==================================
+
+    reconocimiento = ReconocimientoVoz()
+    reconocimiento.registrar_servicio(page)
+
+    grabando = {"activo": False}
+    procesando = {"activo": False}
+
+    estado_voz = ft.Text(
+        "Toca el micrófono para hablar",
+        size=14,
+        color=themes.TEXT_SECONDARY,
+        text_align=ft.TextAlign.CENTER,
+    )
+
+    async def detener_y_procesar():
+
+        if not grabando["activo"] or procesando["activo"]:
+            return
+
+        grabando["activo"] = False
+        procesando["activo"] = True
+
+        microphone_button.disabled = True
+        estado_voz.value = "Procesando tu voz..."
+        estado_voz.color = themes.PRIMARY
+
+        page.update()
+
+        try:
+            # DETENER GRABACIÓN Y CONVERTIR AUDIO A TEXTO
+            texto = await reconocimiento.finalizar_grabacion()
+
+            estado_voz.value = f"Escuché: {texto}"
+            estado_voz.color = themes.PRIMARY
+            page.update()
+
+            # ENVIAR TEXTO A CAMPUSVOZ
+            if on_voice_command:
+                respuesta = on_voice_command(texto)
+
+                # Esperar si la función devuelve una coroutine
+                if asyncio.iscoroutine(respuesta):
+                    respuesta = await respuesta
+
+                if respuesta:
+                    estado_voz.value = (
+                        f"Escuché: {texto}\n{respuesta}"
+                    )
+
+        except Exception as error:
+
+            print("Error de reconocimiento de voz:", error)
+
+            estado_voz.value = str(error)
+            estado_voz.color = themes.ERROR
+
+        finally:
+
+            grabando["activo"] = False
+            procesando["activo"] = False
+
+            microphone_button.icon = ft.Icons.MIC
+            microphone_button.disabled = False
+
+            page.update()
+
+    async def detener_automaticamente():
+
+        # ESPERAR SEIS SEGUNDOS
+        await asyncio.sleep(6)
+
+        if grabando["activo"]:
+            await detener_y_procesar()
+
+    async def controlar_microfono(e):
+
+        if procesando["activo"]:
+            return
+
+        try:
+
+            if not grabando["activo"]:
+
+                # INICIAR GRABACIÓN
+                await reconocimiento.comenzar_grabacion()
+
+                grabando["activo"] = True
+
+                microphone_button.icon = ft.Icons.STOP
+
+                estado_voz.value = (
+                    "Escuchando... tienes 6 segundos para hablar."
+                )
+                estado_voz.color = themes.SUCCESS
+
+                page.update()
+
+                # INICIAR TEMPORIZADOR AUTOMÁTICO
+                asyncio.create_task(
+                    detener_automaticamente()
+                )
+
+            else:
+
+                # DETENER MANUALMENTE
+                await detener_y_procesar()
+
+        except Exception as error:
+
+            print("Error al utilizar el micrófono:", error)
+
+            grabando["activo"] = False
+            procesando["activo"] = False
+
+            microphone_button.icon = ft.Icons.MIC
+            microphone_button.disabled = False
+
+            estado_voz.value = str(error)
+            estado_voz.color = themes.ERROR
+
+            page.update()
+
     microphone_button = ft.IconButton(
         icon=ft.Icons.MIC,
         icon_size=75,
         icon_color=themes.SURFACE,
-        tooltip="Activar reconocimiento de voz",
+        tooltip="Comenzar o detener reconocimiento de voz",
         style=ft.ButtonStyle(
             bgcolor=themes.PRIMARY,
             shape=ft.CircleBorder(),
         ),
         width=170,
         height=170,
-        on_click=lambda e: print("Activar micrófono"),
+        on_click=controlar_microfono,
     )
 
+    # ==================================
+    # CONTROLES INFERIORES
+    # ==================================
+
     controles_inferiores = [
+
         ft.Text(
             "¿Dónde vamos hoy?",
             size=25,
@@ -410,6 +572,7 @@ def build_home(
         )
 
     controles_inferiores.extend([
+
         contador_alertas,
 
         ft.Row(
@@ -418,12 +581,8 @@ def build_home(
             controls=[microphone_button],
         ),
 
-        ft.Text(
-            "Toca el micrófono para hablar",
-            size=14,
-            color=themes.TEXT_SECONDARY,
-            text_align=ft.TextAlign.CENTER,
-        ),
+        estado_voz,
+
     ])
 
     bottom_section = ft.Container(
@@ -442,12 +601,17 @@ def build_home(
         ),
     )
 
+    # ==================================
+    # PANTALLA PRINCIPAL
+    # ==================================
+
     return ft.SafeArea(
         expand=True,
         content=ft.Column(
             expand=True,
             spacing=0,
             controls=[
+
                 ft.Container(
                     expand=7,
                     content=ft.Stack(
@@ -471,6 +635,7 @@ def build_home(
                 ),
 
                 bottom_section,
+
             ],
         ),
     )
