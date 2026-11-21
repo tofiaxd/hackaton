@@ -17,6 +17,18 @@ load_dotenv(ARCHIVO_ENV)
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+from urllib.parse import urlparse
+
+url_info = urlparse(SUPABASE_URL)
+
+print("\n--- DIAGNÓSTICO SUPABASE ---")
+print("URL:", repr(SUPABASE_URL))
+print("Protocolo:", url_info.scheme)
+print("Dominio:", url_info.netloc)
+print("Ruta adicional:", repr(url_info.path))
+print("Clave cargada:", bool(SUPABASE_KEY))
+print("----------------------------\n")
+
 # Verificar que existan
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError(
@@ -31,3 +43,4 @@ supabase: Client = create_client(
 )
 
 print("Conexión con Supabase inicializada correctamente")
+
