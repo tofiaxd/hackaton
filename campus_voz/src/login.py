@@ -49,44 +49,48 @@ def build_login(page: ft.Page, on_login):
 )
 
     return ft.Container(
+    expand=True,
+    width=float("inf"),
+    bgcolor=themes.BACKGROUND,
+    alignment=ft.Alignment.CENTER,
+    content=ft.Column(
         expand=True,
-        bgcolor=themes.BACKGROUND,
-        content=ft.Column(
-            expand=True,
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,
-            controls=[
-                ft.Icon(
-                    ft.Icons.ACCESSIBILITY_NEW,
-                    size=75,
-                    color=themes.PRIMARY,
-                ),
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=20,
+        controls=[
+            ft.Icon(
+                ft.Icons.ACCESSIBILITY_NEW,
+                size=75,
+                color=themes.PRIMARY,
+            ),
 
-                ft.Text(
-                    "Campus Access",
-                    size=30,
-                    weight=ft.FontWeight.BOLD,
-                    color=themes.TEXT_PRIMARY,
-                ),
+            ft.Text(
+                "Campus Access",
+                size=30,
+                weight=ft.FontWeight.BOLD,
+                color=themes.TEXT_PRIMARY,
+                text_align=ft.TextAlign.CENTER,
+            ),
 
-                ft.Text(
-                    "¡Bienvenido/a!",
-                    size=22,
-                    weight=ft.FontWeight.BOLD,
-                    color=themes.TEXT_PRIMARY,
-                ),
+            ft.Text(
+                "¡Bienvenido/a!",
+                size=22,
+                weight=ft.FontWeight.BOLD,
+                color=themes.TEXT_PRIMARY,
+                text_align=ft.TextAlign.CENTER,
+            ),
 
-                ft.Text(
-                    "Para comenzar, dinos cómo te llamas.",
-                    size=14,
-                    color=themes.TEXT_SECONDARY,
-                    text_align=ft.TextAlign.CENTER,
-                ),
+            ft.Text(
+                "Para comenzar, dinos cómo te llamas.",
+                size=14,
+                color=themes.TEXT_SECONDARY,
+                text_align=ft.TextAlign.CENTER,
+            ),
 
-                name_field,
-                error_text,
-                login_button,
-            ],
-        ),
-    )
+            name_field,
+            error_text,
+            login_button,
+        ],
+    ),
+)

@@ -22,10 +22,8 @@ def main(page: ft.Page):
 
     def show_home(name):
         page.clean()
-        page.add(build_home(page))
+        page.add(build_home(page, name))
         page.update()
-
-        print(f"Bienvenido/a, {name}!")
 
     page.add(build_login(page, show_home))
 

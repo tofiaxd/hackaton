@@ -4,7 +4,7 @@ import flet_map as ftm
 import themes
 
 
-def build_home(page: ft.Page):
+def build_home(page: ft.Page, username=""):
 
     # ==================================
     # MAPA
@@ -63,7 +63,7 @@ def build_home(page: ft.Page):
         leading=menu,
         leading_width=55,
         title=ft.Text(
-            "Campus Access",
+            f"Hola, {username}!",
             weight=ft.FontWeight.BOLD,
             size=20,
             color=themes.TEXT_PRIMARY,
