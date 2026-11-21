@@ -6,13 +6,15 @@ import themes
 
 def build_home(page: ft.Page):
 
-    # Centro aproximado de la USM Casa Central
+    # ==================================
+    # MAPA
+    # ==================================
+
     campus_center = ftm.MapLatitudeLongitude(
         latitude=-33.0327,
         longitude=-71.5935
     )
 
-    # Mapa interactivo
     campus_map = ftm.Map(
         expand=True,
         initial_center=campus_center,
@@ -28,7 +30,7 @@ def build_home(page: ft.Page):
                         coordinates=campus_center,
                         content=ft.Icon(
                             ft.Icons.LOCATION_ON,
-                            color=ft.Colors.RED,
+                            color=themes.PRIMARY,
                             size=35,
                         ),
                     )
@@ -40,21 +42,23 @@ def build_home(page: ft.Page):
         ],
     )
 
-    # Menú hamburguesa
-    menu = ft.PopupMenuButton(
-    icon=ft.Icons.MENU,
-    tooltip="Abrir menú",
-    items=[
-        ft.PopupMenuItem(
-            content=ft.Text("Configuración")
-        ),
-        ft.PopupMenuItem(
-            content=ft.Text("Acerca de Campus Access")
-        ),
-    ],
-)
+    # ==================================
+    # MENU SUPERIOR
+    # ==================================
 
-    # Barra superior
+    menu = ft.PopupMenuButton(
+        icon=ft.Icons.MENU,
+        tooltip="Abrir menú",
+        items=[
+            ft.PopupMenuItem(
+                content=ft.Text("Configuración")
+            ),
+            ft.PopupMenuItem(
+                content=ft.Text("Acerca de Campus Access")
+            ),
+        ],
+    )
+
     page.appbar = ft.AppBar(
         leading=menu,
         leading_width=55,
@@ -62,43 +66,80 @@ def build_home(page: ft.Page):
             "Campus Access",
             weight=ft.FontWeight.BOLD,
             size=20,
+            color=themes.TEXT_PRIMARY,
         ),
         center_title=False,
-        bgcolor=themes.PRIMARY,
-        color=ft.Colors.WHITE,
+        bgcolor=themes.SURFACE,
         actions=[
             ft.IconButton(
                 icon=ft.Icons.SETTINGS_OUTLINED,
                 tooltip="Configuración",
+                icon_color=themes.TEXT_PRIMARY,
             ),
         ],
     )
 
-    # Botón inferior
-    navigation_button = ft.Button(
-        content=ft.Row(
-            controls=[
-                ft.Icon(ft.Icons.NAVIGATION, size=25),
-                ft.Text(
-                    "¿A dónde quieres ir?",
-                    size=18,
-                    weight=ft.FontWeight.BOLD,
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            spacing=12,
-        ),
-        expand=True,
-        height=65,
+    # ==================================
+    # BOTON DE MICROFONO
+    # ==================================
+
+    microphone_button = ft.IconButton(
+        icon=ft.Icons.MIC,
+        icon_size=75,
+        icon_color=themes.SURFACE,
+        tooltip="Activar reconocimiento de voz",
         style=ft.ButtonStyle(
             bgcolor=themes.PRIMARY,
-            color=ft.Colors.WHITE,
-            shape=ft.RoundedRectangleBorder(radius=15),
+            shape=ft.CircleBorder(),
         ),
-        on_click=lambda e: print("Abrir selección de destino"),
+        width=170,
+        height=170,
+        on_click=lambda e: print("Activar micrófono"), ##
     )
 
-    # Estructura principal
+    # ==================================
+    # ZONA INFERIOR
+    # ==================================
+
+    bottom_section = ft.Container(
+    expand=4,
+    width=float("inf"),
+    bgcolor=themes.BACKGROUND,
+    padding=ft.Padding.symmetric(horizontal=20, vertical=15),
+    content=ft.Column(
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=15,
+        controls=[
+            ft.Text(
+                "¿Dónde vamos hoy?",
+                size=25,
+                weight=ft.FontWeight.BOLD,
+                color=themes.TEXT_PRIMARY,
+                text_align=ft.TextAlign.CENTER,
+            ),
+
+            # Fila que centra el botón horizontalmente
+            ft.Row(
+                alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[microphone_button],
+            ),
+
+            ft.Text(
+                "Toca el micrófono para hablar",
+                size=14,
+                color=themes.TEXT_SECONDARY,
+                text_align=ft.TextAlign.CENTER,
+            ),
+        ],
+    ),
+)
+
+    # ==================================
+    # ESTRUCTURA PRINCIPAL
+    # ==================================
+
     return ft.SafeArea(
         expand=True,
         content=ft.Column(
@@ -106,21 +147,14 @@ def build_home(page: ft.Page):
             spacing=0,
             controls=[
 
-                # Mapa
+                # Mapa: aproximadamente 65%
                 ft.Container(
-                    expand=True,
+                    expand=7,
                     content=campus_map,
                 ),
 
-                # Botón inferior
-                ft.Container(
-                    padding=ft.Padding.symmetric(
-                        horizontal=18,
-                        vertical=14,
-                    ),
-                    bgcolor=ft.Colors.WHITE,
-                    content=navigation_button,
-                ),
+                # Zona del micrófono: aproximadamente 35%
+                bottom_section,
             ],
         ),
     )

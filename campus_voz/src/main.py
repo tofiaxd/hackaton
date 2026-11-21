@@ -1,5 +1,6 @@
 import flet as ft
 from home import build_home
+from login import build_login
 import themes
 
 
@@ -8,8 +9,6 @@ def main(page: ft.Page):
     # Mantiene una vista tipo teléfono al abrir la aplicación.
     page.window.width = 390
     page.window.height = 830
-    page.window.min_width = 390
-    page.window.min_height = 830
     page.window.resizable = True
 
     page.window.center()
@@ -21,7 +20,14 @@ def main(page: ft.Page):
     page.padding = 0
     page.bgcolor = themes.BACKGROUND
 
-    page.add(build_home(page))
+    def show_home(name):
+        page.clean()
+        page.add(build_home(page))
+        page.update()
+
+        print(f"Bienvenido/a, {name}!")
+
+    page.add(build_login(page, show_home))
 
 
 if __name__ == "__main__":
@@ -30,3 +36,5 @@ if __name__ == "__main__":
 
 def hola(): # Recuerdo de amigo Linux ayudando
     print("hola mundo")
+
+    #jhon linux
