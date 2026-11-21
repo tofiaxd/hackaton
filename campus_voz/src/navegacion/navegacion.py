@@ -3,6 +3,9 @@ import math
 import re
 import unicodedata
 from urllib.parse import urlencode
+import json
+import urllib.request
+import urllib.error
 
 
 # Coordenadas reales del campus
@@ -401,3 +404,158 @@ if __name__ == "__main__":
 
     print(nav.procesar_comando("dónde estoy"))
     print(nav.procesar_comando("abrir mapa"))
+
+
+# ==================================
+# DECODIFICAR RECORRIDO DE VALHALLA
+# ==================================
+
+def decodificar_polyline(encoded, precision=6):
+    """Convierte una polyline6 en coordenadas de latitud y longitud."""
+
+    coordenadas = []
+    indice = 0
+    latitud = 0
+    longitud = 0
+    factor = 10 ** precision
+
+    while indice < len(encoded):
+
+        resultado = 0
+        desplazamiento = 0
+
+        while True:
+            byte = ord(encoded[indice]) - 63
+            indice += 1
+
+            resultado |= (byte & 0x1F) << desplazamiento
+            desplazamiento += 5
+
+            if byte < 0x20:
+                break
+
+        delta = (
+            ~(resultado >> 1)
+            if resultado & 1
+            else resultado >> 1
+        )
+
+        latitud += delta
+
+        resultado = 0
+        desplazamiento = 0
+
+        while True:
+            byte = ord(encoded[indice]) - 63
+            indice += 1
+
+            resultado |= (byte & 0x1F) << desplazamiento
+            desplazamiento += 5
+
+            if byte < 0x20:
+                break
+
+        delta = (
+            ~(resultado >> 1)
+            if resultado & 1
+            else resultado >> 1
+        )
+
+        longitud += delta
+
+        coordenadas.append((
+            latitud / factor,
+            longitud / factor
+        ))
+
+    return coordenadas
+
+
+# ==================================
+# OBTENER RUTA PEATONAL
+# ==================================
+
+def obtener_ruta_peatonal(
+    latitud_origen,
+    longitud_origen,
+    destino
+):
+    """Solicita a Valhalla una ruta peatonal."""
+
+    if destino not in PUNTOS:
+        raise ValueError("Destino desconocido.")
+
+    latitud_destino, longitud_destino = PUNTOS[destino]
+
+    datos = {
+        "locations": [
+            {
+                "lat": latitud_origen,
+                "lon": longitud_origen,
+            },
+            {
+                "lat": latitud_destino,
+                "lon": longitud_destino,
+            },
+        ],
+        "costing": "pedestrian",
+        "units": "kilometers",
+        "language": "es-ES",
+        "shape_format": "polyline6",
+        "directions_type": "none",
+    }
+
+    cuerpo = json.dumps(datos).encode("utf-8")
+
+    solicitud = urllib.request.Request(
+        "https://valhalla1.openstreetmap.de/route",
+        data=cuerpo,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "CampusAccess/1.0",
+            "X-Client-Id": "campus-access-hackathon",
+        },
+        method="POST",
+    )
+
+    try:
+
+        with urllib.request.urlopen(
+            solicitud,
+            timeout=25
+        ) as respuesta:
+
+            resultado = json.loads(
+                respuesta.read().decode("utf-8")
+            )
+
+    except urllib.error.HTTPError as error:
+
+        raise RuntimeError(
+            f"El servidor de rutas respondió con error: {error.code}"
+        )
+
+    except urllib.error.URLError as error:
+
+        raise RuntimeError(
+            f"No se pudo conectar con el servidor de rutas: {error.reason}"
+        )
+
+    try:
+
+        geometria = resultado["trip"]["legs"][0]["shape"]
+
+    except (KeyError, IndexError, TypeError):
+
+        raise RuntimeError(
+            "El servidor no pudo encontrar un recorrido entre estos puntos."
+        )
+
+    coordenadas = decodificar_polyline(geometria)
+
+    if len(coordenadas) < 2:
+        raise RuntimeError(
+            "El recorrido recibido está incompleto."
+        )
+
+    return coordenadas

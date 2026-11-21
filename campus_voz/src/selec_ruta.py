@@ -5,15 +5,16 @@ import themes
 from navegacion.navegacion import CampusVoz
 
 
-def build_seleccion_rutas(page: ft.Page, on_back=None):
+def build_seleccion_rutas(
+    page: ft.Page,
+    on_back=None,
+    on_select=None
+):
 
-    # Instancia de la lógica de navegación
     navegacion = CampusVoz()
 
-    # Destino seleccionado
     destino_seleccionado = {"valor": None}
 
-    # Texto de estado
     estado = ft.Text(
         "Selecciona uno de los destinos disponibles.",
         size=15,
@@ -21,7 +22,6 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
         text_align=ft.TextAlign.CENTER,
     )
 
-    # Botón para verificar
     verificar_button = ft.Button(
         content=ft.Text("Verificar destino"),
         icon=ft.Icons.CHECK_CIRCLE_OUTLINE,
@@ -35,7 +35,10 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
         ),
     )
 
-    # Seleccionar un destino
+    # ==================================
+    # SELECCIONAR DESTINO
+    # ==================================
+
     def seleccionar_destino(destino, nombre):
 
         destino_seleccionado["valor"] = destino
@@ -47,7 +50,10 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
 
         page.update()
 
-    # Crear botones de destinos
+    # ==================================
+    # CREAR BOTONES
+    # ==================================
+
     def crear_boton_destino(nombre, destino, icono):
 
         return ft.Button(
@@ -69,7 +75,10 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
             ),
         )
 
-    # Verificar y abrir la ruta
+    # ==================================
+    # CONFIRMAR DESTINO
+    # ==================================
+
     async def verificar_ruta(e):
 
         destino = destino_seleccionado["valor"]
@@ -86,14 +95,18 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
 
         page.update()
 
-        if resultado["url"]:
-            await ft.UrlLauncher().launch_url(
+        if on_select:
+            await on_select(
+                destino,
                 resultado["url"]
-        )
+            )
 
     verificar_button.on_click = verificar_ruta
 
-    # Botones de destinos
+    # ==================================
+    # BOTONES DE DESTINOS
+    # ==================================
+
     biblioteca = crear_boton_destino(
         "Biblioteca",
         "biblioteca",
@@ -118,7 +131,10 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
         ft.Icons.RESTAURANT,
     )
 
-    # Pantalla
+    # ==================================
+    # PANTALLA
+    # ==================================
+
     return ft.SafeArea(
         expand=True,
         content=ft.Container(
@@ -186,16 +202,14 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
 
                     ft.Container(height=10),
 
-                    # Estado de selección
                     estado,
 
                     ft.Container(expand=True),
 
-                    # Confirmar destino
                     verificar_button,
 
                     ft.Text(
-                        "La ruta se abrirá en Google Maps.",
+                        "El recorrido se mostrará en el mapa.",
                         size=12,
                         color=themes.TEXT_SECONDARY,
                         text_align=ft.TextAlign.CENTER,
