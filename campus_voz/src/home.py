@@ -4,7 +4,7 @@ import flet_map as ftm
 import themes
 
 
-def build_home(page: ft.Page, username="", on_settings=None):
+def build_home(page: ft.Page, username="", on_settings=None, on_routes=None):
 
     # ==================================
     # MAPA
@@ -119,6 +119,23 @@ def build_home(page: ft.Page, username="", on_settings=None):
                 color=themes.TEXT_PRIMARY,
                 text_align=ft.TextAlign.CENTER,
             ),
+
+            ft.Button(
+                content=ft.Text(
+                    "Seleccionar destino",
+                    size=16,
+                    weight=ft.FontWeight.BOLD,
+                ),
+                icon=ft.Icons.ROUTE,
+                width=300,
+                height=50,
+                style=ft.ButtonStyle(
+                    bgcolor=themes.SURFACE,
+                    color=themes.PRIMARY,
+                    shape=ft.RoundedRectangleBorder(radius=12),
+                ),
+                on_click=on_routes,
+                ),
 
             # Fila que centra el botón horizontalmente
             ft.Row(
