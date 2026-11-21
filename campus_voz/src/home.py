@@ -25,6 +25,18 @@ def build_home(
         reportes = []
 
     # ==================================
+    # AJUSTES RESPONSIVOS
+    # ==================================
+
+    ancho_pantalla = page.width or 390
+    pantalla_grande = ancho_pantalla >= 700
+
+    tam_microfono = 108 if pantalla_grande else 88
+    tam_icono_microfono = 48 if pantalla_grande else 40
+    tam_titulo = 22 if pantalla_grande else 20
+    ancho_boton_destino = min(340, max(260, ancho_pantalla - 40))
+
+    # ==================================
     # MAPA
     # ==================================
 
@@ -405,6 +417,7 @@ def build_home(
         size=14,
         color=themes.TEXT_SECONDARY,
         text_align=ft.TextAlign.CENTER,
+        weight=ft.FontWeight.BOLD,
     )
 
     async def detener_y_procesar():
@@ -425,22 +438,38 @@ def build_home(
             # DETENER GRABACIÓN Y CONVERTIR AUDIO A TEXTO
             texto = await reconocimiento.finalizar_grabacion()
 
-            estado_voz.value = f"Escuché: {texto}"
-            estado_voz.color = themes.PRIMARY
-            page.update()
-
             # ENVIAR TEXTO A CAMPUSVOZ
             if on_voice_command:
                 respuesta = on_voice_command(texto)
 
-                # Esperar si la función devuelve una coroutine
                 if asyncio.iscoroutine(respuesta):
                     respuesta = await respuesta
 
                 if respuesta:
-                    estado_voz.value = (
-                        f"Escuché: {texto}\n{respuesta}"
-                    )
+                    estado_voz.value = respuesta
+
+                    respuesta_normalizada = respuesta.lower()
+
+                    # DESTACAR LAS PREGUNTAS DE CONFIRMACIÓN
+                    if (
+                        "confirmar o cancelar" in respuesta_normalizada
+                        or "confirmas" in respuesta_normalizada
+                        or "en qué zona" in respuesta_normalizada
+                    ):
+                        estado_voz.color = themes.ERROR
+
+                    elif (
+                        "cancelado" in respuesta_normalizada
+                        or "registrado" in respuesta_normalizada
+                    ):
+                        estado_voz.color = themes.SUCCESS
+
+                    else:
+                        estado_voz.color = themes.PRIMARY
+
+            else:
+                estado_voz.value = f"Escuché: {texto}"
+                estado_voz.color = themes.PRIMARY
 
         except Exception as error:
 
@@ -517,15 +546,15 @@ def build_home(
 
     microphone_button = ft.IconButton(
         icon=ft.Icons.MIC,
-        icon_size=75,
+        icon_size=tam_icono_microfono,
         icon_color=themes.SURFACE,
         tooltip="Comenzar o detener reconocimiento de voz",
         style=ft.ButtonStyle(
             bgcolor=themes.PRIMARY,
             shape=ft.CircleBorder(),
         ),
-        width=170,
-        height=170,
+        width=tam_microfono,
+        height=tam_microfono,
         on_click=controlar_microfono,
     )
 
@@ -581,7 +610,15 @@ def build_home(
             controls=[microphone_button],
         ),
 
-        estado_voz,
+        ft.Container(
+            content=estado_voz,
+            width=min(340, max(260, ancho_pantalla - 40)),
+            height=65,
+            padding=8,
+            alignment=ft.Alignment.CENTER,
+            bgcolor=themes.SURFACE,
+            border_radius=12,
+        ),
 
     ])
 
@@ -613,7 +650,7 @@ def build_home(
             controls=[
 
                 ft.Container(
-                    expand=7,
+                    expand=3.5,
                     content=ft.Stack(
                         expand=True,
                         controls=[

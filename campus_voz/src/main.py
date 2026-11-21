@@ -23,7 +23,7 @@ def main(page: ft.Page):
     # ==================================
 
     page.window.width = 390
-    page.window.height = 830
+    page.window.height = 844
     page.window.resizable = True
 
     page.title = "Campus Access"
