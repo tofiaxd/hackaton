@@ -8,7 +8,10 @@ from login import build_login
 from configuracion import build_configuracion
 from selec_ruta import build_seleccion_rutas
 
-from navegacion.navegacion import obtener_ruta_peatonal
+from navegacion.navegacion import (
+    CampusVoz,
+    obtener_ruta_peatonal,
+)
 
 import themes
 
@@ -27,18 +30,25 @@ def main(page: ft.Page):
 
     username = ""
 
-    # ==================================
-    # ABRIR GOOGLE MAPS
-    # ==================================
+    # LISTA COMPARTIDA DE ALERTAS
+    reportes = []
+    gestor_alertas = CampusVoz(reportes=reportes)
+
+    def guardar_alerta(tipo, zona):
+        gestor_alertas.reporte_pendiente = {
+            "tipo": tipo,
+            "zona": zona,
+        }
+
+        gestor_alertas.confirmar_reporte()
+
+        print("Alerta registrada:", reportes[-1])
+
+        return True
 
     async def abrir_google_maps(url):
-
         if url:
             await ft.UrlLauncher().launch_url(url)
-
-    # ==================================
-    # PANTALLA PRINCIPAL
-    # ==================================
 
     def show_home(
         name=None,
@@ -48,7 +58,6 @@ def main(page: ft.Page):
         destination=None,
         route_message=None
     ):
-
         nonlocal username
 
         if name is not None:
@@ -66,21 +75,18 @@ def main(page: ft.Page):
                 on_settings=show_configuracion,
                 on_routes=show_rutas,
                 on_maps=maps_click if maps_url else None,
+                on_add_alert=guardar_alerta,
                 route_coordinates=route_coordinates,
                 current_location=current_location,
                 destination=destination,
                 route_message=route_message,
+                reportes=reportes,
             )
         )
 
         page.update()
 
-    # ==================================
-    # CONFIGURACIÓN
-    # ==================================
-
     def show_configuracion(e=None):
-
         page.clean()
 
         page.add(
@@ -92,12 +98,7 @@ def main(page: ft.Page):
 
         page.update()
 
-    # ==================================
-    # SELECCIÓN DE DESTINO
-    # ==================================
-
     def show_rutas(e=None):
-
         page.clean()
 
         page.add(
@@ -109,10 +110,6 @@ def main(page: ft.Page):
         )
 
         page.update()
-
-    # ==================================
-    # OBTENER GPS Y CALCULAR RECORRIDO
-    # ==================================
 
     async def calcular_ruta(destino, maps_url):
 
@@ -127,9 +124,8 @@ def main(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     alignment=ft.MainAxisAlignment.CENTER,
                     controls=[
-                        ft.ProgressRing(
-                            color=themes.PRIMARY
-                        ),
+                        ft.ProgressRing(color=themes.PRIMARY),
+
                         ft.Text(
                             "Calculando tu recorrido...",
                             color=themes.TEXT_PRIMARY,
@@ -143,10 +139,7 @@ def main(page: ft.Page):
         page.update()
 
         try:
-
-            # Obtener ubicación del dispositivo
             geo = ftg.Geolocator()
-
             permiso = await geo.request_permission()
 
             if permiso in (
@@ -163,7 +156,6 @@ def main(page: ft.Page):
             longitud = posicion.longitude
             precision = posicion.accuracy
 
-            # Comprobar precisión del GPS
             if precision is not None and precision > 150:
                 raise RuntimeError(
                     f"La precisión del GPS es de {round(precision)} metros. "
@@ -172,7 +164,6 @@ def main(page: ft.Page):
 
             ubicacion = (latitud, longitud)
 
-            # Calcular recorrido peatonal
             coordenadas = await asyncio.to_thread(
                 obtener_ruta_peatonal,
                 latitud,
@@ -180,7 +171,6 @@ def main(page: ft.Page):
                 destino,
             )
 
-            # Volver al mapa mostrando la ruta
             show_home(
                 route_coordinates=coordenadas,
                 current_location=ubicacion,
@@ -190,7 +180,6 @@ def main(page: ft.Page):
             )
 
         except Exception as error:
-
             print("Error al calcular ruta:", error)
 
             show_home(
@@ -199,16 +188,7 @@ def main(page: ft.Page):
                 route_message=f"No se pudo calcular la ruta: {error}",
             )
 
-    # ==================================
-    # INICIAR APLICACIÓN
-    # ==================================
-
-    page.add(
-        build_login(
-            page,
-            show_home
-        )
-    )
+    page.add(build_login(page, show_home))
 
 
 if __name__ == "__main__":
