@@ -4,7 +4,12 @@ import flet_map as ftm
 import themes
 
 
-def build_home(page: ft.Page, username="", on_settings=None, on_routes=None):
+def build_home(
+    page: ft.Page,
+    username="",
+    on_settings=None,
+    on_maps=None
+):
 
     # ==================================
     # MAPA
