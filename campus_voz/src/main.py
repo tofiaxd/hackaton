@@ -26,5 +26,5 @@ if __name__ == "__main__":
     ft.run(main)
 
 
-def hola():
+def hola(): # Recuerdo de amigo Linux ayudando
     print("hola mundo")
