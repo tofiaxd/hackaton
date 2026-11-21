@@ -1,7 +1,7 @@
 
 import flet as ft
 import themes
-
+from BD.conexiones import supabase
 
 def build_login(page: ft.Page, on_login):
     # Campo para ingresar el nombre
@@ -20,6 +20,7 @@ def build_login(page: ft.Page, on_login):
     )
 
     # Acción del botón
+    
     def login_click(e):
         name = name_field.value.strip() if name_field.value else ""
 
@@ -28,8 +29,31 @@ def build_login(page: ft.Page, on_login):
             page.update()
             return
 
-        error_text.value = ""
-        on_login(name)
+        try:
+            # Buscar el usuario en Supabase
+            respuesta = (
+                supabase.table("usuarios")
+                .select("id, nombre")
+                .eq("nombre", name)
+                .limit(1)
+                .execute()
+            )
+
+            # Comprobar si existe
+            if not respuesta.data:
+                error_text.value = "Usuario no encontrado."
+                page.update()
+                return
+
+            # Usuario encontrado
+            error_text.value = ""
+            on_login(respuesta.data[0]["nombre"])
+
+        except Exception as error:
+            error_text.value = "Error al conectar con la base de datos."
+            print("Error:", error)
+            page.update()
+
 
     # Botón para ingresar
     login_button = ft.Button(
