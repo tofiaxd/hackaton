@@ -1,25 +1,27 @@
 import flet as ft
+from home import build_home
+import themes
 
 
 def main(page: ft.Page):
-    counter = ft.Text("0", size=50, data=0)
 
-    def increment_click(e: ft.Event[ft.FloatingActionButton]):
-        counter.data += 1
-        counter.value = str(counter.data)
+    # Mantiene una vista tipo teléfono al abrir la aplicación.
+    page.window.width = 390
+    page.window.height = 830
+    page.window.min_width = 390
+    page.window.min_height = 830
+    page.window.resizable = True
 
-    page.floating_action_button = ft.FloatingActionButton(
-        icon=ft.Icons.ADD, key="increment", on_click=increment_click
-    )
-    page.add(
-        ft.SafeArea(
-            expand=True,
-            content=ft.Container(
-                content=counter,
-                alignment=ft.Alignment.CENTER,
-            ),
-        )
-    )
+    page.window.center()
+
+    page.title = "Campus Access"
+    page.theme_mode = ft.ThemeMode.LIGHT
+
+    page.theme = themes.APP_THEME
+    page.padding = 0
+    page.bgcolor = themes.BACKGROUND
+
+    page.add(build_home(page))
 
 
 if __name__ == "__main__":
