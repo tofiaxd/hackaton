@@ -3,6 +3,11 @@
 CAMPUSVOZ
 
 Prototipo de navegación universitaria accesible | Hackatón
+
+Integrantes:
+Florencia Salgado
+Sofía Barraza
+Monserrat López
 ========================================================
 
 1. DESCRIPCIÓN
