@@ -9,9 +9,6 @@ def build_login(page: ft.Page, on_login):
         label="Tu nombre",
         hint_text="Escribe tu nombre aquí",
         prefix_icon=ft.Icons.PERSON_OUTLINE,
-        border_radius=12,
-        border_color=themes.SECONDARY,
-        focused_border_color=themes.PRIMARY,
         width=320,
     )
 

@@ -4,7 +4,7 @@ import flet_map as ftm
 import themes
 
 
-def build_home(page: ft.Page, username=""):
+def build_home(page: ft.Page, username="", on_settings=None):
 
     # ==================================
     # MAPA
@@ -72,9 +72,10 @@ def build_home(page: ft.Page, username=""):
         bgcolor=themes.SURFACE,
         actions=[
             ft.IconButton(
-                icon=ft.Icons.SETTINGS_OUTLINED,
-                tooltip="Configuración",
-                icon_color=themes.TEXT_PRIMARY,
+            icon=ft.Icons.SETTINGS_OUTLINED,
+            tooltip="Configuración",
+            icon_color=themes.TEXT_PRIMARY,
+            on_click=on_settings,
             ),
         ],
     )
