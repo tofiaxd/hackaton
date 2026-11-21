@@ -87,7 +87,9 @@ def build_seleccion_rutas(page: ft.Page, on_back=None):
         page.update()
 
         if resultado["url"]:
-            await page.launch_url(resultado["url"])
+            await ft.UrlLauncher().launch_url(
+                resultado["url"]
+        )
 
     verificar_button.on_click = verificar_ruta
 

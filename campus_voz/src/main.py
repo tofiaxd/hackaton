@@ -2,6 +2,7 @@ import flet as ft
 from home import build_home
 from login import build_login
 from configuracion import build_configuracion
+from selec_ruta import build_seleccion_rutas
 import themes
 
 
@@ -28,12 +29,13 @@ def main(page: ft.Page):
         page.clean()
 
         page.add(
-            build_home(
-                page,
-                username,
-                on_settings=show_configuracion
-            )
+        build_home(
+            page,
+            username,
+            on_settings=show_configuracion,
+            on_routes=show_rutas
         )
+    )
 
         page.update()
 
@@ -51,6 +53,17 @@ def main(page: ft.Page):
         page.update()
 
     page.add(build_login(page, show_home))
+
+    def show_rutas(e=None):
+        page.clean()
+
+        page.add(
+            build_seleccion_rutas(
+                page,
+                on_back=lambda: show_home()
+            )
+        )
+    page.update()
 
 
 if __name__ == "__main__":
